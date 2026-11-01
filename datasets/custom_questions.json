@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "difficulty": "Level 1: Simple SELECT",
+    "question": "Show all students.",
+    "sql": "SELECT * FROM students;",
+    "expected_tables": ["students"],
+    "split": "test"
+  },
+  {
+    "id": 2,
+    "difficulty": "Level 1: Simple SELECT",
+    "question": "Find students with CGPA greater than 8.5.",
+    "sql": "SELECT student_name, cgpa FROM students WHERE cgpa > 8.5;",
+    "expected_tables": ["students"],
+    "split": "test"
+  },
+  {
+    "id": 3,
+    "difficulty": "Level 1: Simple SELECT",
+    "question": "List all courses with 4 credits.",
+    "sql": "SELECT course_title, credits FROM courses WHERE credits = 4;",
+    "expected_tables": ["courses"],
+    "split": "test"
+  },
+  {
+    "id": 4,
+    "difficulty": "Level 2: Aggregation & Sorting",
+    "question": "Find the average marks in DBMS.",
+    "sql": "SELECT AVG(marks) FROM marks WHERE subject = 'DBMS';",
+    "expected_tables": ["marks"],
+    "split": "test"
+  },
+  {
+    "id": 5,
+    "difficulty": "Level 2: Aggregation & Sorting",
+    "question": "Count the number of students in each department.",
+    "sql": "SELECT dept_id, COUNT(*) AS student_count FROM students GROUP BY dept_id;",
+    "expected_tables": ["students"],
+    "split": "test"
+  },
+  {
+    "id": 6,
+    "difficulty": "Level 2: Aggregation & Sorting",
+    "question": "Display the top 3 students based on cgpa.",
+    "sql": "SELECT student_name, cgpa FROM students ORDER BY cgpa DESC LIMIT 3;",
+    "expected_tables": ["students"],
+    "split": "test"
+  },
+  {
+    "id": 7,
+    "difficulty": "Level 3: Multi-Table JOIN",
+    "question": "Show the names of students who scored more than 80 marks in DBMS.",
+    "sql": "SELECT s.student_name FROM students s JOIN marks m ON s.student_id = m.student_id WHERE m.subject = 'DBMS' AND m.marks > 80;",
+    "expected_tables": ["students", "marks"],
+    "split": "test"
+  },
+  {
+    "id": 8,
+    "difficulty": "Level 3: Multi-Table JOIN",
+    "question": "Find students belonging to the Computer Science department.",
+    "sql": "SELECT s.student_name FROM students s JOIN departments d ON s.dept_id = d.dept_id WHERE d.dept_name = 'Computer Science';",
+    "expected_tables": ["students", "departments"],
+    "split": "test"
+  },
+  {
+    "id": 9,
+    "difficulty": "Level 3: Multi-Table JOIN",
+    "question": "What is the average salary of instructors in each department?",
+    "sql": "SELECT d.dept_name, AVG(i.salary) AS avg_salary FROM instructors i JOIN departments d ON i.dept_id = d.dept_id GROUP BY d.dept_name;",
+    "expected_tables": ["instructors", "departments"],
+    "split": "test"
+  },
+  {
+    "id": 10,
+    "difficulty": "Level 4: HAVING & Subqueries",
+    "question": "Find departments having more than 2 students.",
+    "sql": "SELECT dept_id, COUNT(*) FROM students GROUP BY dept_id HAVING COUNT(*) > 2;",
+    "expected_tables": ["students"],
+    "split": "test"
+  },
+  {
+    "id": 11,
+    "difficulty": "Level 4: HAVING & Subqueries",
+    "question": "Show students who scored above the average marks.",
+    "sql": "SELECT student_id, marks FROM marks WHERE marks > (SELECT AVG(marks) FROM marks);",
+    "expected_tables": ["marks"],
+    "split": "test"
+  },
+  {
+    "id": 12,
+    "difficulty": "Level 5: Ambiguous / Complex",
+    "question": "Show the highest students.",
+    "sql": "SELECT student_name, cgpa FROM students ORDER BY cgpa DESC LIMIT 1;",
+    "expected_tables": ["students"],
+    "split": "test"
+  }
+]
