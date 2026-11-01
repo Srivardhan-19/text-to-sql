@@ -49,3 +49,4 @@ def test_benchmark_suite_execution(sqlite_test_db):
     assert not summary_df.empty
     assert "Execution Accuracy (EX %)" in summary_df.columns
     assert len(detailed_df) >= 20  # Baseline + LLM across items
+

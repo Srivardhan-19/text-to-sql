@@ -164,3 +164,4 @@ cp .env.example .env
 - **Phase 7: Streamlit Web Interface** (5-tab dashboard: Query Generator, Schema Explorer, Connection Manager, Benchmark, History)
 - **Phase 8: Evaluation & Comparative Study** (Benchmark dataset, Exact Match & Execution Accuracy harnesses)
 - **Phase 9: Documentation & Academic Review** (Architecture docs, literature survey, methodology)
+

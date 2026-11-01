@@ -54,3 +54,4 @@ The **Natural Language to MySQL Query Generator** is designed with a decoupled, 
 5. **Execution & Limits (`database/query_executor.py`)**:
    - Caps returned records to `max_rows` (default 100).
    - Measures generation and execution latencies independently.
+

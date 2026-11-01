@@ -130,3 +130,4 @@ if __name__ == "__main__":
     summary, _ = run_benchmark_suite(schema, eng)
     print("\n=== BENCHMARK SUMMARY ===")
     print(summary.to_string(index=False))
+

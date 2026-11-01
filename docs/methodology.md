@@ -34,3 +34,4 @@
 - Parses generated queries into a concrete syntax tree (CST) using `sqlglot`.
 - Walks AST nodes to verify that no node inherits from forbidden mutating expressions (`exp.Insert`, `exp.Update`, `exp.Delete`, `exp.Drop`, `exp.Alter`, `exp.TruncateTable`).
 - Rejects any query containing multiple semicolons or statement chains.
+

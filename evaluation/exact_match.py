@@ -25,3 +25,4 @@ def compute_exact_match(predicted_sql: str, gold_sql: str, dialect: str = "mysql
     norm_pred = normalize_sql(predicted_sql, dialect)
     norm_gold = normalize_sql(gold_sql, dialect)
     return norm_pred == norm_gold
+

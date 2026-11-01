@@ -39,3 +39,4 @@ def compute_execution_accuracy(predicted_sql: str, gold_sql: str, engine: Engine
     except Exception as e:
         logger.debug(f"Execution accuracy evaluation failed: {e}")
         return False
+

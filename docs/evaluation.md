@@ -34,3 +34,4 @@
 - **LLM Strengths & Edge Cases**:
   - The schema-aware LLM handles complex nested expressions, arbitrary aggregations, and ambiguous questions effectively.
   - Requires connectivity to external APIs; however, our zero-crash fallback guarantees continuous application uptime.
+

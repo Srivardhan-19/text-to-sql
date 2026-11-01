@@ -19,3 +19,4 @@
 - **Citation**: Lei, T. et al. (2024). *Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows*.
 - **Relevance**: Focuses on dialect compatibility, execution safety, and real enterprise database interaction (dialect quirks, read-only guarantees).
 - **Application in Our Project**: Addressed through SQLGlot AST safety filtering, restricting statements to read-only queries, and row limit ceiling enforcement.
+
