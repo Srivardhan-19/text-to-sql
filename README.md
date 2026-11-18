@@ -118,11 +118,20 @@ An academic Natural Language Processing (NLP) capstone project that translates E
 
 ### 1. Clone & Setup Virtual Environment
 ```powershell
-git clone <your-repo-url>
+git clone <repo-url>
 cd <repo-folder>
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# Create environment file
+cp .env.example .env
+
+# Edit .env to add your API keys.
+#   GEMINI_API_KEY=your-gemini-key
+#   OPENAI_API_KEY=your-openai-key
+# If you omit these, the system will automatically fall back to the
+# offline Baseline generator (Approach 1) and remain fully functional.
 ```
 
 ### 2. Environment Configuration
