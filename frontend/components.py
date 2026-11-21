@@ -6,6 +6,8 @@ from __future__ import annotations
 import streamlit as st
 import pandas as pd
 import uuid
+import time
+from typing import Any, Optional
 
 
 def render_header(title: str, subtitle: str) -> None:
@@ -51,6 +53,17 @@ def render_results_table(df: pd.DataFrame, execution_time_ms: float) -> None:
         df = df.copy()
         df.columns = new_cols
 
-
-
+    st.markdown(f"#### Execution Results ({len(df)} rows in {execution_time_ms:.1f} ms)")
+    if df.empty:
+        st.warning("Query executed successfully, but returned 0 matching records.")
+    else:
+        st.dataframe(df, use_container_width=True)
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="Download Results as CSV",
+            data=csv,
+            file_name="query_results.csv",
+            mime="text/csv",
+            key=f"dl_{time.time()}_{uuid.uuid4().hex[:8]}"
+        )
 

@@ -1,6 +1,7 @@
 """
 Application Configuration and Settings Module.
 Loads environment variables safely and provides strongly-typed configuration objects.
+Strictly traditional NLP architecture (no LLMs or external generative APIs).
 """
 from __future__ import annotations
 
@@ -18,7 +19,6 @@ try:
     if env_file.exists():
         load_dotenv(dotenv_path=env_file)
 except ImportError:
-    # Fallback to manual minimal .env loading if dotenv not yet installed
     BASE_DIR = Path(__file__).resolve().parent.parent
     env_file = BASE_DIR / ".env"
     if env_file.exists():
@@ -67,22 +67,10 @@ class SafetySettings:
 
 
 @dataclass
-class LLMSettings:
-    """LLM Provider and Model Configuration."""
-    provider: str = field(default_factory=lambda: os.getenv("LLM_PROVIDER", "gemini").lower())
-    gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
-    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
-    openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
-    openai_model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
-    openai_base_url: str = field(default_factory=lambda: os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"))
-
-
-@dataclass
 class Settings:
-    """Consolidated application settings container."""
+    """Consolidated application settings container (Traditional NLP only)."""
     db: DatabaseSettings = field(default_factory=DatabaseSettings)
     safety: SafetySettings = field(default_factory=SafetySettings)
-    llm: LLMSettings = field(default_factory=LLMSettings)
     app_env: str = field(default_factory=lambda: os.getenv("APP_ENV", "development"))
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
     base_dir: Path = field(default_factory=lambda: BASE_DIR)
@@ -92,4 +80,3 @@ class Settings:
 def get_settings() -> Settings:
     """Singleton getter for application settings."""
     return Settings()
-

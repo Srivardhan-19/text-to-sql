@@ -1,4 +1,4 @@
-"""Initial setup and configuration test."""
+"""Initial setup and configuration test (Traditional NLP)."""
 import pytest
 from config.settings import get_settings
 
@@ -10,7 +10,7 @@ def test_settings_loaded():
     assert settings.db.port == 3306
     assert settings.safety.max_rows == 100
     assert settings.safety.allow_write is False
-    assert settings.llm.provider in ("gemini", "openai", "offline")
+    assert settings.app_env in ("development", "production", "test")
 
 
 def test_core_dependencies():
@@ -32,4 +32,3 @@ def test_core_dependencies():
     assert nltk.__version__ is not None
     assert pandas.__version__ is not None
     assert numpy.__version__ is not None
-

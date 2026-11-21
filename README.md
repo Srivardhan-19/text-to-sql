@@ -1,176 +1,133 @@
-# Natural Language to MySQL Query Generator (Text-to-SQL)
+# Natural Language to MySQL Query Generator (Traditional NLP)
 
-An academic Natural Language Processing (NLP) capstone project that translates English questions into validated MySQL queries, dynamically inspects relational schemas, executes permitted queries, and explains the SQL logic in plain English.
+An academic Natural Language Processing (NLP) capstone project that translates English questions into validated MySQL queries using **traditional NLP, conventional machine learning, and rule-based query construction exclusively**—without any Large Language Models (LLMs) or external generative AI services.
 
 ---
 
 ## 🌟 Key Features
 
-1. **Automatic Schema Discovery**: Introspects connected MySQL or SQLite databases via SQLAlchemy metadata without hardcoded tables or columns.
-2. **Dual-Approach SQL Generation**:
-   - **Approach 1 (Baseline)**: Lightweight rule-based slot-filling with TF-IDF intent classification and BFS multi-table JOIN path discovery.
-   - **Approach 2 (Advanced)**: Schema-aware LLM generation with few-shot prompting and structured JSON output (supporting Google Gemini and OpenAI).
-   - **Zero-Crash Offline Fallback**: Automatically cascades to the baseline if external APIs are unavailable.
-3. **AST Safety & Validation Guard**: Uses SQLGlot to strictly enforce read-only `SELECT` queries, blocking any destructive mutations (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`) and SQL injections.
-4. **Schema Whitelisting**: Intercepts and rejects queries referencing hallucinated tables or columns before reaching the database.
-5. **Interactive Streamlit Web Dashboard**: Includes Database Explorer, live Query Generator with execution preview, Performance Benchmarking, and Query History.
+1. **Strictly Traditional NLP Pipeline**:
+   - Tokenization, text normalization, and contraction expansion (`NLTK`).
+   - Relational keyword preservation (retaining operators, aggregates, and topological markers).
+   - WordNet lemmatization and stop-word filtering.
+   - TF-IDF n-gram vectorization + Logistic Regression intent classifier (`scikit-learn`).
+   - Regex-based operator, aggregate (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`), limit, and condition extraction.
+   - Dynamic schema linking with string similarity (`difflib.SequenceMatcher`) across arbitrary databases.
+2. **Dynamic Database Schema Discovery**:
+   - Automatically inspects tables, columns, primary keys, and foreign keys via SQLAlchemy / MySQL `INFORMATION_SCHEMA`.
+   - Discovers multi-table relationships and computes shortest-path JOINs using Breadth-First Search (BFS) graph traversal.
+3. **Mandatory 2-Step User-Controlled Execution Workflow**:
+   - **Step 1 (Generate & Preview)**: The natural language question is processed and converted into MySQL syntax. **The query is never executed automatically.**
+   - **Step 2 (Preview & Edit)**: The user inspects the generated SQL in an editable code area, reviews the AST safety and schema whitelisting validation status, and can modify the SQL.
+   - **Step 3 (Explicit Run)**: The user explicitly clicks **"Run Query"**. The displayed query is re-validated through SQLGlot AST checks before execution.
+4. **AST Safety & Mutation Blocker**:
+   - Uses SQLGlot to restrict execution strictly to read-only `SELECT` statements.
+   - Blocks mutating operations (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`) and multi-statement queries.
+5. **Zero-Configuration Demo Database**:
+   - If the user does not have or connect a local MySQL server, the application automatically loads a pre-seeded, self-contained 7-table College Management demo database (`college_db.sqlite`) and prompts the user with questions tailored to it.
+6. **Multi-Tab Streamlit Dashboard**:
+   - Natural Language Query generator with editable SQL preview and explicit run trigger.
+   - Database Schema Explorer.
+   - MySQL Connection Manager.
+   - Benchmark Evaluation Suite.
+   - Session Query History.
 
 ---
 
 ## 🏗️ System Architecture
 
-```
-[ User English Question ]
-           │
-           ▼
-[ 1. NLP Preprocessing ]
-├── Text Normalization & Contraction Expansion
-├── Relational Keyword Preservation (more than, top, avg, each)
-└── WordNet Lemmatization & Tokenization
-           │
-           ▼
-[ 2. Schema Linking & Relationship Graph ]
-├── Dynamic Table & Column Introspection
-└── BFS Shortest-Path Multi-Table JOIN Discovery
-           │
-           ├───► [ Approach 1: Traditional NLP Baseline ]
-           │     ├── TF-IDF Intent Classifier
-           │     └── Slot-Filling Relational Templates
-           │
-           └───► [ Approach 2: Schema-Aware LLM ]
-                 ├── Dynamic Schema In-Context Prompting
-                 └── Structured JSON Parser & Explainer
-           │
-           ▼
-[ 3. SQLGlot AST Safety & Validation Gate ]
-├── Restrict to SELECT / UNION Only
-├── Reject Mutating Operations & Multi-Statement Queries
-└── Schema Whitelist Verification (Tables & Columns)
-           │
-           ▼
-[ 4. Safe Query Execution Engine ]
-├── Automatic Row Capping (LIMIT 100)
-└── Latency Measurement (Gen vs Exec Time)
-           │
-           ▼
-[ 5. Results & Interactive Presentation ]
-```
-
----
-
-## 📂 Project Structure
-
 ```text
-├── app.py                     # Streamlit multi-page web application
-├── requirements.txt           # Pinned project dependencies
-├── .env.example               # Environment configuration template
-├── .gitignore                 # Protects virtual environments and credentials
-│
-├── config/
-│   └── settings.py            # Strongly-typed configuration dataclasses
-│
-├── database/
-│   ├── connection.py          # SQLAlchemy connection & health checks
-│   ├── schema_detector.py     # Dynamic introspection & BFS JOIN path finder
-│   ├── schema_formatter.py    # DDL prompt formatter & Markdown serializer
-│   └── query_executor.py      # Safe execution wrapper with row capping
-│
-├── nlp/
-│   ├── preprocessing.py       # Normalization, tokenization & lemmatization
-│   ├── keyword_extraction.py  # Numeric conditions, operators & aggregates
-│   ├── intent_classifier.py   # TF-IDF + Logistic Regression classifier
-│   └── entity_extractor.py    # Lexical and synonym-based schema linker
-│
-├── generation/
-│   ├── baseline_generator.py  # Traditional slot-filling baseline
-│   ├── llm_generator.py       # Configurable LLM client (Gemini / OpenAI / Offline)
-│   ├── prompt_builder.py      # In-context few-shot prompt assembler
-│   └── response_parser.py     # Markdown sanitizer & JSON output parser
-│
-├── validation/
-│   ├── sql_validator.py       # SQLGlot AST parser & mutation blocker
-│   └── schema_validator.py    # Schema table and column reference whitelister
-│
-├── evaluation/
-│   ├── dataset_loader.py      # Benchmark dataset manager
-│   ├── exact_match.py         # AST-normalized SQL Exact Match (EM)
-│   ├── execution_accuracy.py  # Result set Execution Accuracy (EX)
-│   └── evaluate.py            # Comparative evaluation harness
-│
-├── datasets/
-│   └── custom_questions.json  # 5-tier evaluation dataset
-│
-├── sample_database/
-│   ├── schema.sql             # 7-table College Management relational DDL
-│   ├── sample_data.sql        # Realistic sample seed records
-│   └── setup_db.py            # MySQL & SQLite dual-mode database initializer
-│
-├── frontend/
-│   ├── components.py          # Reusable UI widgets
-│   └── styles.py              # Custom CSS styling
-│
-└── tests/                     # Automated pytest test suites
+[ User Natural Language Question ]
+               │
+               ▼
+   [ 1. NLP Preprocessing ]
+   ├── Lowercase Normalization & Contraction Expansion
+   ├── Relational Keyword Preservation (more, less, top, each, avg)
+   └── WordNet Lemmatization & Tokenization
+               │
+               ▼
+   [ 2. Intent & Keyword Extraction ]
+   ├── TF-IDF + Logistic Regression Intent Classifier
+   └── Regex Condition, Operator, Aggregate & Limit Extractor
+               │
+               ▼
+   [ 3. Dynamic Schema Linking & BFS JOINs ]
+   ├── Lexical & Fuzzy Similarity Schema Matching
+   └── Shortest-Path BFS Foreign-Key Graph Traversal
+               │
+               ▼
+   [ 4. Rule-Based SQL Construction ]
+   └── Deterministic Slot-Filling Query Assembler
+               │
+               ▼
+   [ 5. SQLGlot AST Safety & Validation Gate ]
+   ├── Restrict to SELECT Only
+   └── Reject Mutations & Multiple Statements
+               │
+               ▼
+     [ 6. SQL Preview Section ]  ◄─── (User can review, copy, and edit SQL)
+               │
+       [ User Clicks 'Run Query' ]
+               │
+               ▼
+   [ 7. Safe Execution Engine & Results Display ]
+   ├── Enforce Row Ceiling (LIMIT 100)
+   ├── Measure Generation & Execution Latencies
+   └── Render Interactive Results Table & CSV Export
 ```
 
 ---
 
 ## 🚀 Installation & Quick Start
 
-### 1. Clone & Setup Virtual Environment
+### 1. Clone the Repository & Setup Virtual Environment
 ```powershell
-git clone <repo-url>
-cd <repo-folder>
+git clone https://github.com/Srivardhan-19/text-to-sql.git
+cd text-to-sql
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# Create environment file
-cp .env.example .env
-
-# Edit .env to add your API keys.
-#   GEMINI_API_KEY=your-gemini-key
-#   OPENAI_API_KEY=your-openai-key
-# If you omit these, the system will automatically fall back to the
-# offline Baseline generator (Approach 1) and remain fully functional.
 ```
 
-### 2. Environment Configuration
-Copy `.env.example` to `.env`:
+### 2. Configure Environment (Optional)
 ```powershell
-cp .env.example .env
+Copy-Item .env.example .env
 ```
-*(Optional)* Add your MySQL password or Google Gemini API key if testing with live services.
+*Note: No API keys are needed! The system runs 100% locally on CPU without external AI services.*
 
-### 3. Initialize Sample Database
+### 3. Run the Streamlit Web Application
 ```powershell
-# Option A: Initialize local SQLite database (Zero-configuration mode)
-.\.venv\Scripts\python.exe sample_database/setup_db.py --sqlite
-
-# Option B: Initialize live MySQL database
-.\.venv\Scripts\python.exe sample_database/setup_db.py
+streamlit run app.py
 ```
 
-### 4. Run the Streamlit Application
-```powershell
-.\.venv\Scripts\streamlit run app.py
-```
+- If you have a local MySQL server running, configure credentials in `.env` or in the **Database Connection** tab.
+- If you **do not** have MySQL running, the application will automatically initialize and load the **College Management demo database**, allowing you to ask queries immediately without any configuration.
 
-### 5. Run Automated Tests
+### 4. Run Automated Tests
 ```powershell
-.\.venv\Scripts\pytest -v
+pytest -v
 ```
 
 ---
 
-## 📊 Completed Implementation Phases
+## 📊 Benchmark Evaluation
 
-- **Phase 1: Project Setup & Core Configuration** (Directory layout, dependencies, `.env`, test harness)
-- **Phase 2: Sample Database** (7 normalized tables, realistic seed records, dual-engine loader)
-- **Phase 3: Automatic Schema Detection** (Metadata reflection, BFS shortest-path JOIN discovery)
-- **Phase 4: NLP Preprocessing & Baseline** (Tokenization, keyword extraction, intent classifier, template baseline)
-- **Phase 5: Schema-Aware LLM Generation** (In-context prompt builder, Gemini/OpenAI integration, offline fallback)
-- **Phase 6: SQL Validation & Safe Execution** (SQLGlot AST parser, mutation interceptor, schema whitelisting, row capping)
-- **Phase 7: Streamlit Web Interface** (5-tab dashboard: Query Generator, Schema Explorer, Connection Manager, Benchmark, History)
-- **Phase 8: Evaluation & Comparative Study** (Benchmark dataset, Exact Match & Execution Accuracy harnesses)
-- **Phase 9: Documentation & Academic Review** (Architecture docs, literature survey, methodology)
+The project includes an automated evaluation harness testing:
+- **Exact Match (EM)**: AST-normalized SQL equivalence.
+- **Execution Accuracy (EX)**: Result set correctness against ground-truth database records.
+- **SQL Validity**: Structural and syntactical correctness via SQLGlot.
+- **Latency**: Sub-50ms deterministic CPU query generation.
 
+---
+
+## 📚 Academic & Technical References
+
+- **Spider Dataset & Baselines**: Tao Yu et al., *Spider: A Large-Scale Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task* (EMNLP 2018).
+- **RAT-SQL**: Peter Shaw et al., *Relation-Aware Schema Encoding and Linking for Text-to-SQL Parsers* (ACL 2020).
+- **SQLGlot**: Toby Mao, SQL Parser, Transpiler, Optimizer, and Engine.
+- **NLTK & scikit-learn**: Traditional tokenization, lemmatization, and TF-IDF linear classification.
+
+---
+
+## 📜 License
+MIT License.

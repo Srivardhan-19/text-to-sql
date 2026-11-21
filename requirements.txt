@@ -6,7 +6,7 @@ cryptography>=42.0.0
 # SQL Parsing & AST Validation
 sqlglot>=23.0.0
 
-# NLP & Machine Learning Baseline
+# Traditional NLP & Machine Learning
 nltk>=3.8.1
 scikit-learn>=1.4.0
 numpy>=1.26.0
@@ -18,11 +18,9 @@ streamlit>=1.35.0
 # Configuration & Utilities
 python-dotenv>=1.0.1
 pydantic>=2.7.0
-requests>=2.31.0
 
 # Evaluation & Plotting
 matplotlib>=3.8.0
 
 # Testing
 pytest>=8.0.0
-

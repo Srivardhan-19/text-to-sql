@@ -1,6 +1,7 @@
 """
 Benchmark Evaluation Harness.
-Orchestrates comparative evaluation of Traditional Baseline vs. Schema-Aware LLM approach.
+Orchestrates systematic evaluation of the Traditional NLP & Rule-Based Text-to-SQL system.
+Evaluates Exact Match (EM), Execution Accuracy (EX), SQL Validity, and Latency.
 """
 from __future__ import annotations
 
@@ -16,7 +17,6 @@ from evaluation.dataset_loader import BenchmarkItem, DatasetLoader
 from evaluation.exact_match import compute_exact_match
 from evaluation.execution_accuracy import compute_execution_accuracy
 from generation.baseline_generator import BaselineSQLGenerator
-from generation.llm_generator import LLMGenerator
 from validation.sql_validator import SQLValidator
 
 logger = logging.getLogger(__name__)
@@ -71,51 +71,37 @@ def run_benchmark_suite(
     schema: DatabaseSchema,
     engine: Engine
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Runs complete benchmark suite comparing Baseline and LLM approaches."""
+    """Runs complete benchmark suite on the Traditional NLP pipeline."""
     items = DatasetLoader.load(split="test")
     validator = SQLValidator()
 
-    # 1. Baseline Approach
+    # Traditional NLP & Rule-Based Pipeline
     baseline_gen = BaselineSQLGenerator(schema)
-    baseline_records = evaluate_approach(
-        "Approach 1: Traditional Baseline",
+    records = evaluate_approach(
+        "Traditional NLP & Rule-Based Pipeline",
         baseline_gen.generate,
         items,
         engine,
         validator
     )
 
-    # 2. LLM Approach (with graceful fallback)
-    llm_gen = LLMGenerator(schema)
-    llm_records = evaluate_approach(
-        "Approach 2: Schema-Aware LLM",
-        llm_gen.generate,
-        items,
-        engine,
-        validator
-    )
+    detailed_df = pd.DataFrame(records)
 
-    all_records = baseline_records + llm_records
-    detailed_df = pd.DataFrame(all_records)
+    # Compute Summary Metrics
+    total = len(detailed_df)
+    val_pct = (detailed_df["is_valid"].sum() / total) * 100 if total else 0.0
+    em_pct = (detailed_df["exact_match"].sum() / total) * 100 if total else 0.0
+    ex_pct = (detailed_df["execution_accuracy"].sum() / total) * 100 if total else 0.0
+    avg_gen_time = detailed_df["gen_time_ms"].mean() if total else 0.0
 
-    # Compute Summary Metrics per Approach
-    summary_data = []
-    for app_name in detailed_df["approach"].unique():
-        sub = detailed_df[detailed_df["approach"] == app_name]
-        total = len(sub)
-        val_pct = (sub["is_valid"].sum() / total) * 100 if total else 0.0
-        em_pct = (sub["exact_match"].sum() / total) * 100 if total else 0.0
-        ex_pct = (sub["execution_accuracy"].sum() / total) * 100 if total else 0.0
-        avg_gen_time = sub["gen_time_ms"].mean() if total else 0.0
-
-        summary_data.append({
-            "Approach": app_name,
-            "Total Evaluated": total,
-            "SQL Validity (%)": round(val_pct, 1),
-            "Exact Match (EM %)": round(em_pct, 1),
-            "Execution Accuracy (EX %)": round(ex_pct, 1),
-            "Avg Latency (ms)": round(avg_gen_time, 1)
-        })
+    summary_data = [{
+        "Approach": "Traditional NLP Pipeline",
+        "Total Evaluated": total,
+        "SQL Validity (%)": round(val_pct, 1),
+        "Exact Match (EM %)": round(em_pct, 1),
+        "Execution Accuracy (EX %)": round(ex_pct, 1),
+        "Avg Latency (ms)": round(avg_gen_time, 1)
+    }]
 
     summary_df = pd.DataFrame(summary_data)
     return summary_df, detailed_df
@@ -130,4 +116,3 @@ if __name__ == "__main__":
     summary, _ = run_benchmark_suite(schema, eng)
     print("\n=== BENCHMARK SUMMARY ===")
     print(summary.to_string(index=False))
-

@@ -1,11 +1,11 @@
 """
 Keyword, Condition, and Operator Extraction Module.
-Detects numeric conditions, comparison operators, aggregate terms, and limit clauses.
+Detects numeric conditions, string filters, comparison operators, aggregate terms, limit clauses, and ordering.
 """
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -15,6 +15,7 @@ class ConditionClause:
     operator: str
     value: str
     raw_span: str
+    is_numeric: bool = True
 
 
 @dataclass
@@ -22,8 +23,10 @@ class ExtractedKeywords:
     aggregates: list[str]  # e.g. ["AVG", "COUNT"]
     conditions: list[ConditionClause]
     order_by_direction: Optional[str]  # "ASC", "DESC"
-    limit: Optional[int]
-    group_by_terms: list[str]
+    order_by_keyword: Optional[str] = None  # e.g. "cgpa", "salary"
+    limit: Optional[int] = None
+    group_by_terms: list[str] = field(default_factory=list)
+    distinct: bool = False
 
 
 class KeywordExtractor:
@@ -33,8 +36,8 @@ class KeywordExtractor:
         "average": "AVG", "avg": "AVG", "mean": "AVG",
         "count": "COUNT", "number of": "COUNT", "how many": "COUNT", "total number": "COUNT",
         "sum": "SUM", "total": "SUM",
-        "maximum": "MAX", "max": "MAX", "highest": "MAX", "greatest": "MAX", "top": "MAX",
-        "minimum": "MIN", "min": "MIN", "lowest": "MIN", "least": "MIN", "bottom": "MIN"
+        "maximum": "MAX", "max": "MAX", "highest": "MAX", "greatest": "MAX",
+        "minimum": "MIN", "min": "MIN", "lowest": "MIN", "least": "MIN"
     }
 
     OPERATOR_PATTERNS = [
@@ -45,9 +48,9 @@ class KeywordExtractor:
         (r"(?:equal\s+to|equals|=)\s+([0-9]+(?:\.[0-9]+)?)", "="),
     ]
 
-    STRING_CONDITION_PATTERNS = [
-        (r"(?:in|for|of|department|dept|subject)\s+['\"]?([A-Za-z0-9_-]+)['\"]?", "="),
-        (r"(?:named|called)\s+['\"]?([A-Za-z\s]+)['\"]?", "="),
+    STRING_FILTER_PATTERNS = [
+        (r"(?:in|for|of|department|dept|subject|course|named)\s+['\"]([A-Za-z0-9_\s-]+)['\"]", "="),
+        (r"\b(?:in|of)\s+([A-Z]{2,6})\b", "="),  # Acronyms like CSE, ECE, DBMS, OS
     ]
 
     def extract_aggregates(self, text: str) -> list[str]:
@@ -71,67 +74,53 @@ class KeywordExtractor:
                     column_hint=None,
                     operator=op,
                     value=val,
-                    raw_span=match.group(0)
+                    raw_span=match.group(0),
+                    is_numeric=True
                 ))
 
-        # String conditions (e.g. in DBMS, for CSE)
-        # Match common subject / department filter patterns
-        subj_match = re.search(r"\b(?:in|subject|course)\s+['\"]?([A-Za-z0-9_-]{2,})['\"]?", lower)
-        if subj_match:
-            val = subj_match.group(1).upper()
-            if val not in ("THE", "EACH", "EVERY", "ALL", "ORDER"):
-                conditions.append(ConditionClause(
-                    column_hint="subject",
-                    operator="=",
-                    value=val,
-                    raw_span=subj_match.group(0)
-                ))
+        # String / Literal filters (e.g. 'DBMS', 'Computer Science', CSE)
+        for pattern, op in self.STRING_FILTER_PATTERNS:
+            for match in re.finditer(pattern, text):
+                val = match.group(1).strip()
+                # Exclude SQL stopwords
+                if val.lower() not in ("each", "every", "the", "a", "all", "students", "courses", "instructors"):
+                    conditions.append(ConditionClause(
+                        column_hint=None,
+                        operator=op,
+                        value=val,
+                        raw_span=match.group(0),
+                        is_numeric=False
+                    ))
 
         return conditions
 
-    def extract_limit_and_order(self, text: str) -> tuple[Optional[int], Optional[str]]:
+    def extract_order_by(self, text: str) -> tuple[Optional[str], Optional[str]]:
+        """Returns (direction, target_hint) if an ordering request is found."""
         lower = text.lower()
-        limit = None
-        direction = None
+        if re.search(r"\b(top|highest|greatest|maximum|max|best|descending|desc)\b", lower):
+            return "DESC", None
+        if re.search(r"\b(bottom|lowest|least|minimum|min|worst|ascending|asc)\b", lower):
+            return "ASC", None
+        if re.search(r"\b(ordered\s+by|sorted\s+by|order\s+by|sort\s+by)\b", lower):
+            return "ASC", None
+        return None, None
 
-        # Detect top N
-        top_match = re.search(r"\b(?:top|first)\s+([0-9]+)\b", lower)
-        if top_match:
-            limit = int(top_match.group(1))
-            direction = "DESC"
+    def extract_limit(self, text: str) -> Optional[int]:
+        match = re.search(r"\b(?:top|first|limit)\s+([0-9]+)\b", text, flags=re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+        return None
 
-        # Detect bottom N
-        bot_match = re.search(r"\b(?:bottom|lowest)\s+([0-9]+)\b", lower)
-        if bot_match:
-            limit = int(bot_match.group(1))
-            direction = "ASC"
-
-        # Explicit order terms
-        if not direction:
-            if any(k in lower for k in ["highest", "descending", "best", "greatest"]):
-                direction = "DESC"
-            elif any(k in lower for k in ["lowest", "ascending", "least"]):
-                direction = "ASC"
-
-        return limit, direction
+    def extract_distinct(self, text: str) -> bool:
+        return bool(re.search(r"\b(distinct|unique|different)\b", text, flags=re.IGNORECASE))
 
     def extract(self, text: str) -> ExtractedKeywords:
-        aggs = self.extract_aggregates(text)
-        conditions = self.extract_conditions(text)
-        limit, direction = self.extract_limit_and_order(text)
-
-        # Detect grouping hints
-        lower = text.lower()
-        group_terms = []
-        if re.search(r"\b(?:each|every|per|by)\s+([a-z_]+)\b", lower):
-            for match in re.finditer(r"\b(?:each|every|per|by)\s+([a-z_]+)\b", lower):
-                group_terms.append(match.group(1))
-
+        direction, hint = self.extract_order_by(text)
         return ExtractedKeywords(
-            aggregates=aggs,
-            conditions=conditions,
+            aggregates=self.extract_aggregates(text),
+            conditions=self.extract_conditions(text),
             order_by_direction=direction,
-            limit=limit,
-            group_by_terms=group_terms
+            order_by_keyword=hint,
+            limit=self.extract_limit(text),
+            distinct=self.extract_distinct(text)
         )
-
