@@ -259,8 +259,7 @@ if page == "💬 Natural Language Query":
                         "exec_time_ms": f"{exec_res.execution_time_ms:.1f}"
                     })
             else:
-                err_msg = recheck_sql.error_message or recheck_schema.error_message
-                st.error(f"Execution rejected by safety validator: {err_msg}")
+                st.error("⚠️ Query Error: Query rejected due to safety or schema validation.")
                 st.session_state.last_exec_res = None
 
         # Display results if query was executed
@@ -271,7 +270,7 @@ if page == "💬 Natural Language Query":
                 render_results_table(df, exec_res.execution_time_ms)
                 render_explanation(st.session_state.sql_explanation)
             else:
-                st.error(f"Execution Error: {exec_res.error_message}")
+                st.error("⚠️ Query Execution Error: The database was unable to execute this query.")
         elif not run_clicked:
             st.caption("⏸️ Query is waiting for your approval. Click **'Run Query'** above to execute.")
 
