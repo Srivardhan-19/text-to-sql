@@ -1,7 +1,6 @@
 # Natural Language to MySQL Query Generator (Traditional NLP)
 
-An academic Natural Language Processing (NLP) capstone project that translates English questions into validated MySQL queries using **traditional NLP, conventional machine learning, and rule-based query construction exclusively**—without any Large Language Models (LLMs) or external generative AI services.
-
+An academic Natural Language Processing (NLP) capstone project that translates English questions into validated MySQL queries using **traditional NLP, conventional machine learning, and rule-based query construction exclusively**—without any Large Language Models (LLMs).
 ---
 
 ## 🌟 Key Features
